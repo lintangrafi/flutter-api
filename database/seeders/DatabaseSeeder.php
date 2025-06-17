@@ -13,6 +13,11 @@ class DatabaseSeeder extends Seeder
             VendorSeeder::class,
             ProductSeeder::class,
             PurchaseOrderSeeder::class,
+            WarehouseSeeder::class,
+            GoodsReceiptSeeder::class,
+            GoodsReceiptItemSeeder::class,
+            InvoiceSeeder::class,
+            InvoiceItemSeeder::class,
         ]);
     }
 }

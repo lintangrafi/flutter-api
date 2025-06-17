@@ -11,7 +11,7 @@ class PurchaseOrderSeeder extends Seeder
     public function run()
     {
         $po = PurchaseOrder::create([
-            'po_number' => 'PO-001',
+            'po_number' => 'PO-003',
             'vendor_id' => 1,
             'date' => now(),
             'status' => 'Menunggu Persetujuan',

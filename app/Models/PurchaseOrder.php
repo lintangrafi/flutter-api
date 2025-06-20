@@ -14,8 +14,10 @@ class PurchaseOrder extends Model
         'vendor_id',
         'date',
         'status',
-        'total',
+        'total_amount',
         'created_by',
+        'warehouse_id',
+        'total',
     ];
 
     public function vendor()
@@ -36,5 +38,15 @@ class PurchaseOrder extends Model
     public function warehouse()
     {
         return $this->belongsTo(Warehouse::class);
+    }
+
+    public function itemsByNumber()
+    {
+        return $this->hasMany(PurchaseOrderItem::class, 'po_number', 'po_number');
+    }
+
+    public function getTotalAttribute($value)
+    {
+        return number_format($value, 0, '', '.');
     }
 }

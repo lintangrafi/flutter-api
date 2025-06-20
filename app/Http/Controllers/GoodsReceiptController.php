@@ -1,18 +1,27 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\GoodsReceipt;
-use Illuminate\Support\Facades\Log;
+use App\Models\GoodsReceiptItem;
+use App\Models\PurchaseOrder;
+use App\Models\PurchaseOrderItem;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class GoodsReceiptController extends Controller
 {
     public function index()
     {
-        $data = GoodsReceipt::with(['items'])->get();
+        $data = GoodsReceipt::with(['items.purchaseOrderItem', 'purchaseOrder', 'creator'])->get();
         return response()->json($data);
+    }
+
+    public function show($id)
+    {
+        $gr = GoodsReceipt::with(['items.purchaseOrderItem', 'purchaseOrder', 'creator'])->findOrFail($id);
+        return response()->json($gr);
     }
 
     public function store(Request $request)
@@ -32,13 +41,13 @@ class GoodsReceiptController extends Controller
                 'items.*.condition' => 'required|string',
             ]);
 
-            $po = \App\Models\PurchaseOrder::findOrFail($validated['po_id']);
+            $po = PurchaseOrder::findOrFail($validated['po_id']);
             if ($po->status !== 'approved') {
                 logger()->warning('PO not approved for GR', ['po_id' => $validated['po_id']]);
                 return response()->json(['message' => 'PO must be approved to create GR'], 422);
             }
 
-            $gr = \App\Models\GoodsReceipt::create([
+            $gr = GoodsReceipt::create([
                 'po_id' => $validated['po_id'],
                 'gr_number' => $validated['gr_number'],
                 'tanggal' => $validated['tanggal'],
@@ -63,40 +72,20 @@ class GoodsReceiptController extends Controller
         }
     }
 
-    public function show($id)
+    public function updateStatus($id, Request $request)
     {
-        $goodsReceipt = GoodsReceipt::with(['items'])->findOrFail($id);
-        return response()->json($goodsReceipt);
-    }
-
-    public function update(Request $request, $id)
-    {
-        $goodsReceipt = GoodsReceipt::findOrFail($id);
         $validated = $request->validate([
-            'po_id' => 'required|exists:purchase_orders,id',
-            'tanggal' => 'required|date',
-            'status' => 'string',
-            'created_by' => 'required|exists:users,id',
+            'status' => 'required|in:Pending,Completed',
         ]);
-        $goodsReceipt->update($validated);
-        return response()->json($goodsReceipt);
-    }
-
-    public function destroy($id)
-    {
-        $goodsReceipt = GoodsReceipt::findOrFail($id);
-        $goodsReceipt->delete();
-        return response()->json(null, 204);
-    }
-
-    public function updateStatus(Request $request, $id)
-    {
-        $request->validate([
-            'status' => 'required|in:Pending,Completed'
-        ]);
-        $gr = GoodsReceipt::with('items')->findOrFail($id);
-        $gr->status = $request->status;
+        $gr = GoodsReceipt::findOrFail($id);
+        $user = Auth::user();
+        if ($validated['status'] === 'Completed' && (!$user || $user->role !== 'manager')) {
+            return response()->json(['message' => 'Only manager can complete GR'], 403);
+        }
+        $gr->status = $validated['status'];
         $gr->save();
-        return response()->json($gr, 200);
+        // Opsional: update status PO jika semua item sudah diterima
+        // ...implementasi opsional di sini...
+        return response()->json(['message' => 'Status updated', 'gr_number' => $gr->gr_number, 'status' => $gr->status]);
     }
 }

@@ -12,9 +12,10 @@ class PurchaseOrderItem extends Model
     protected $fillable = [
         'po_id',
         'product_id',
-        'name',
         'price',
         'quantity',
+        'subtotal_amount',
+        'name',
         'unit',
     ];
 
@@ -26,5 +27,10 @@ class PurchaseOrderItem extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function getPriceAttribute($value)
+    {
+        return number_format($value, 0, '', '.');
     }
 }

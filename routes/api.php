@@ -91,3 +91,15 @@ Route::apiResource('invoice-items', InvoiceItemController::class);
 // GET    /api/invoice-items/{id}      -> detail invoice item
 // PUT    /api/invoice-items/{id}      -> update invoice item
 // DELETE /api/invoice-items/{id}      -> hapus invoice item
+
+Route::prefix('goods-receipts')->group(function () {
+    Route::get('/', [GoodsReceiptController::class, 'index']);
+    Route::get('{id}', [GoodsReceiptController::class, 'show']);
+    Route::post('/', [GoodsReceiptController::class, 'store']);
+    Route::patch('{id}/status', [GoodsReceiptController::class, 'updateStatus']);
+});
+
+Route::get('/invoices', [\App\Http\Controllers\Api\InvoiceController::class, 'index']);
+Route::post('/invoices', [\App\Http\Controllers\Api\InvoiceController::class, 'store']);
+Route::get('/invoices/{id}', [\App\Http\Controllers\Api\InvoiceController::class, 'show']);
+Route::patch('/invoices/{id}/status', [\App\Http\Controllers\Api\InvoiceController::class, 'updateStatus']);

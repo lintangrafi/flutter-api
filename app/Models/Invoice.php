@@ -7,9 +7,15 @@ use Illuminate\Database\Eloquent\Model;
 class Invoice extends Model
 {
     protected $fillable = [
-        'po_id',
+        'invoice_number',
+        'gr_id',
+        'date',
         'total',
         'status',
-        'created_by',
     ];
+
+    public function goodsReceipt()
+    {
+        return $this->belongsTo(\App\Models\GoodsReceipt::class, 'gr_id');
+    }
 }
